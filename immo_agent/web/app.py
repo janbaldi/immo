@@ -38,7 +38,7 @@ from immo_agent.core.models import (
     User,
     UserAction,
 )
-from immo_agent.sources.extract import EPC_LABELS, extract_listing
+from immo_agent.sources.extract import EPC_LABELS, read_listing
 from immo_agent.sources.http import Fetcher
 
 app = FastAPI(title="Immo Agent")
@@ -566,7 +566,7 @@ async def parser_test(request: Request, url: str = Form(...), user: User = Depen
     try:
         async with Fetcher(min_interval=0) as f:
             page = await f.get(url)
-        raw = extract_listing(page.text, page.url).clean()
+        raw = read_listing(page.text, page.url).clean()
         return render(request, "admin_parser.html", user=user, url=url, raw=vars(raw), missing=raw.missing_critical())
     except Exception as e:  # noqa: BLE001 - shown to the admin
         return render(request, "admin_parser.html", user=user, url=url, error=repr(e))

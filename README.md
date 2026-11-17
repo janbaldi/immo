@@ -170,6 +170,23 @@ notary platform; estate-agency websites are found by the **discovery** agent and
    docker compose exec web immo statbel-import
    ```
 
+### The AI page reader
+
+Agency websites all look different and change their layout from time to time. To keep up without someone
+fixing the parser, an AI model (Claude) reads every agency listing page first. The built-in rules
+still supply photos, publication time and map coordinates, and take over completely when the AI is switched off
+or unavailable. Biddit and the notary platform deliver clean data and do not need the AI.
+
+1. Create an account at <https://console.anthropic.com>, add a payment method and create an **API key**.
+2. In `.env` set `LLM_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=` followed by your key, then `docker compose up -d`.
+3. `immo check-live` prints which reader is active ("Page reader: LLM … first, rules as backup").
+
+**Cost (rough estimate):** the AI only reads a page when a listing is new or its summary changed.
+With the default model (`claude-opus-5-5`) that is about 2–3 euro cent per page. That works out to roughly €100–150 once for
+the first full read of 100 agencies, then a few euro per day. With `LLM_MODEL=claude-haiku-5-5` it is about 40 times
+cheaper, possibly a little less accurate. Check your real spend in the Anthropic console after the first week.
+Set `LLM_PROVIDER=none` to switch the AI off.
+
 The fair-price model trains itself every night once at least 100 real listings have been collected.
 Until then (or for areas with fewer than 30 comparable homes) it shows **"insufficient data"** instead of guessing.
 
@@ -318,7 +335,7 @@ Code layout:
 
 ```
 immo_agent/
-  core/         config, database, data model, personal-data guard, optional LLM
+  core/         config, database, data model, personal-data guard, LLM page reader
   sources/      polite fetcher, generic extractor, agency (Zabun/Whise/Omnicasa/generic), Biddit & notary (JSON), portals
   enrichment/   EPC, flood, Statbel, permits adapters
   analysis/     dedup, change detection, valuation (+ rent, yield, signals)
@@ -410,7 +427,8 @@ make check-live IMMO=.venv/bin/immo
 - New migration after changing `core/models.py`: `.venv/bin/alembic revision --autogenerate -m "what changed"`.
 - **Recorded fixtures:** `immo record-fixture <listing-url> <name>` saves a real page in
   `tests/fixtures/recorded/`; `tests/test_recorded.py` then checks every recorded page automatically.
-- Optional extras: `.[llm]` (Anthropic; set `LLM_PROVIDER=anthropic` and `ANTHROPIC_API_KEY`) fills fields the
-  rules could not find and polishes visit requests; `.[browser]` + `playwright install chromium` for JavaScript sites.
+- Page reading: `sources/extract.py` `read_listing()` = rules (`extract_listing`) + LLM (`core/llm.py` `read_page`,
+  structured JSON output, every value validated before it overwrites a rule value). Tests use a fake client, no key needed.
+  The LLM also polishes visit requests. Extras: `.[browser]` + `playwright install chromium` for JavaScript sites.
 
 Assumptions, open points and everything that still needs checking against the live sites: **[DECISIONS.md](DECISIONS.md)**.

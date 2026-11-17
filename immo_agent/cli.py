@@ -92,6 +92,11 @@ def cmd_check_live(a: argparse.Namespace) -> None:
         if not get_settings().portal_crosscheck_enabled:
             q = q.where(Source.is_portal.is_(False))
         sources = {s.id: s for s in db.scalars(q.limit(a.limit))}
+    st = get_settings()
+    reader = (
+        f"LLM ({st.llm_model}) first, rules as backup" if st.llm_provider == "anthropic" else "rules only (LLM_PROVIDER=none)"
+    )
+    print(f"Page reader: {reader}")
     print(f"Checking {len(sources)} live sources (polite: max 1 request per {get_settings().min_request_interval}s per site)...")
     runs = asyncio.run(scout.run_many(list(sources), full=False))
     ok = 0
@@ -185,13 +190,13 @@ def cmd_statbel(a: argparse.Namespace) -> None:
 
 
 def cmd_parse(a: argparse.Namespace) -> None:
-    from immo_agent.sources.extract import extract_listing
+    from immo_agent.sources.extract import read_listing
     from immo_agent.sources.http import Fetcher
 
     async def go() -> None:
         async with Fetcher() as f:
             page = await f.get(a.url)
-        raw = extract_listing(page.text, page.url).clean()
+        raw = read_listing(page.text, page.url).clean()
         print(json.dumps(asdict(raw), indent=2, default=str, ensure_ascii=False))
         print("missing critical fields:", raw.missing_critical() or "none")
 

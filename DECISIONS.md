@@ -13,7 +13,7 @@ Consequences:
   from the requirement "never invented HTML". The fix is in place: `immo record-fixture <url> <name>` saves real
   pages and `tests/test_recorded.py` checks every recorded page automatically. Record a few pages per template
   family on the first day of live running and replace the hand-written pages where possible.
-- Verified in the sandbox: all 56 tests (93% coverage; 1 skipped until real pages are recorded), ruff, mypy, Alembic migration, and the Docker stack
+- Verified in the sandbox: 57 tests passing (93% coverage; 1 more skipped until real pages are recorded), ruff, mypy, Alembic migration, and the Docker stack
   (Postgres, web, worker, MailHog) booting with every web page rendering and the worker polling and recording
   source failures.
 
@@ -38,8 +38,14 @@ turns red in Ops/QA.
 ## Choices
 
 - **One crawler for the three agency template families.** They share the crawl (listing page → detail links →
-  detail page), differ in markers and link patterns, and all detail pages are read by the generic extractor
-  (JSON-LD → Open Graph → labelled text → optional LLM). Separate per-family parsing code will be added only where
+  detail page) and differ in markers and link patterns.
+- **The LLM is the primary page reader** for agency detail pages (when `LLM_PROVIDER=anthropic`): it reads the
+  visible page text (capped at 12,000 characters) and returns a fixed JSON schema. Each value is validated
+  (ranges, 4-digit postal code, allowed labels) before it replaces the rule-based value. The rules (JSON-LD → Open
+  Graph → labelled text) still supply photos, publication time and coordinates, and are the full fallback when
+  the LLM is off, refuses or errors. Biddit, notary and portal data are structured and are not sent to the LLM.
+  Default model `claude-opus-5-5` (low effort); `claude-haiku-5-5` is the cheaper option. Cost estimates in the
+  README are rough and unmeasured. Separate per-family parsing code will be added only where
   recorded pages show it is needed.
 - **Change detection without re-fetching everything**: each listing card on the index page is hashed; the detail
   page is fetched only when the card is new or changed. A nightly full crawl detects removed listings.
@@ -65,8 +71,8 @@ turns red in Ops/QA.
 - **Times** are stored as naive UTC everywhere (SQLite drops time zones); quiet hours use Europe/Brussels.
 - **Feed filtering** runs in Python over the 2000 newest properties (noted in code as a shortcut; move to SQL past
   ~50k properties).
-- **LLM** is optional (`LLM_PROVIDER=anthropic`, default model `claude-opus-5-5`, low effort); it only fills
-  missing critical fields and polishes visit requests, never adds contact details. Without a key everything works.
+- **Without an LLM key everything still works** (rules only); the model is told never to return contact details
+  and its output passes the same personal-data scrub as everything else.
 - **CSRF**: session cookies are `SameSite=Lax`, which blocks cross-site form posts in current browsers; no separate
   CSRF tokens.
 - **Docker image** uses an editable install so `config/` and templates are read from `/app`; `config/` is mounted

@@ -13,6 +13,7 @@ from urllib.parse import urljoin
 
 from selectolax.lexbor import LexborHTMLParser as HTMLParser
 
+from immo_agent.core import llm
 from immo_agent.core.pii import scrub
 
 CRITICAL_FIELDS = ("price", "municipality", "property_type")
@@ -273,6 +274,13 @@ def extract_listing(html: str, url: str) -> RawListing:
     )
     if re.search(r"(?i)te huur|/huur|/rent|for-rent|a-louer", (raw.title or "") + url):
         raw.transaction = "rent"
+    return raw
+
+
+def read_listing(html: str, url: str) -> RawListing:
+    """How every agency detail page is read: the LLM first (when configured), rules for the rest."""
+    raw = extract_listing(html, url)
+    llm.read_page(raw, html)
     return raw
 
 

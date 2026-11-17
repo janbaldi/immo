@@ -8,9 +8,8 @@ shortcut: family patterns are written from public URL conventions, not recorded 
 import re
 from urllib.parse import urlsplit
 
-from immo_agent.core import llm
 from immo_agent.sources.base import Connector, IndexItem, external_id_from_url, sha
-from immo_agent.sources.extract import RawListing, extract_listing, links
+from immo_agent.sources.extract import RawListing, links, read_listing
 
 DETAIL_WORDS = (
     r"(te-koop|kopen|koop|detail|pand|panden|property|properties|aanbod|woning|huis|appartement|estate"
@@ -60,10 +59,8 @@ class AgencyConnector(Connector):
         page = await self.fetcher.get(item.url, browser=self.source.use_browser)
         if page.status >= 400:
             raise RuntimeError(f"HTTP {page.status} for {item.url}")
-        raw = extract_listing(page.text, item.url)
+        raw = read_listing(page.text, item.url)
         raw.external_id = item.external_id
-        if raw.missing_critical():
-            llm.fill_missing(raw, page.text)
         return raw
 
 

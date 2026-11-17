@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-16 bg-white rounded-xl shadow p-6">
+  <h1 class="text-xl font-bold mb-1">{{ "Create your account" if mode == "signup" else "Log in" }}</h1>
+  <p class="text-sm text-slate-500 mb-4">Immo Agent watches the Flemish housing market for you.</p>
+  {% if error %}<p class="bg-red-50 text-red-700 text-sm p-2 rounded mb-3">{{ error }}</p>{% endif %}
+  <form method="post" action="/{{ mode }}" class="space-y-3">
+    <label class="block text-sm">E-mail<input name="email" type="email" required class="mt-1 w-full border rounded p-2"></label>
+    <label class="block text-sm">Password<input name="password" type="password" required minlength="8" class="mt-1 w-full border rounded p-2"></label>
+    {% if mode == "signup" %}
+    <label class="block text-sm">Plan
+      <select name="plan" class="mt-1 w-full border rounded p-2">
+        <option value="home">Home buyer (€39/month later; free during the test)</option>
+        <option value="investor">Investor (€89/month later; free during the test)</option>
+      </select></label>
+    {% endif %}
+    <button class="w-full bg-indigo-600 text-white rounded p-2 font-semibold">{{ "Sign up" if mode == "signup" else "Log in" }}</button>
+  </form>
+  <p class="text-sm mt-4 text-center">
+    {% if mode == "signup" %}Have an account? <a class="text-indigo-700 underline" href="/login">Log in</a>
+    {% else %}New here? <a class="text-indigo-700 underline" href="/signup">Create an account</a>{% endif %}
+  </p>
+</div>
+{% endblock %}

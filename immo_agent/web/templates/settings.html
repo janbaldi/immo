@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Alert settings</h1>
+<section class="bg-white border rounded-xl p-4 mb-4 text-sm">
+  <h2 class="font-semibold mb-2">Telegram (fastest)</h2>
+  {% if user.telegram_chat_id %}
+    <p>✅ Connected. <form method="post" action="/settings/telegram/disconnect" class="inline"><button class="text-red-600 underline">Disconnect</button></form></p>
+  {% elif user.telegram_link_code %}
+    <ol class="list-decimal ml-5 space-y-1">
+      <li>Open <a class="text-indigo-700 underline" target="_blank" rel="noopener" href="https://t.me/{{ settings.telegram_bot_name }}?start={{ user.telegram_link_code }}">this Telegram link</a> on your phone or computer.</li>
+      <li>Press <b>Start</b>. Within a minute this page shows "Connected" (refresh it).</li>
+    </ol>
+    <p class="text-slate-500 mt-1">If the link does not open, send <code>/start {{ user.telegram_link_code }}</code> to @{{ settings.telegram_bot_name }}.</p>
+  {% else %}
+    <form method="post" action="/settings/telegram"><button class="bg-sky-600 text-white rounded px-3 py-1">Connect Telegram</button></form>
+  {% endif %}
+</section>
+<form method="post" action="/settings" class="bg-white border rounded-xl p-4 text-sm space-y-3">
+  <h2 class="font-semibold">E-mail & quiet hours</h2>
+  <label class="flex gap-2 items-center"><input type="checkbox" name="email_alerts" value="true" {{ 'checked' if user.email_alerts }}> Send alerts to {{ user.email }}</label>
+  <div class="flex gap-2 items-center">Quiet hours from <input name="quiet_start" value="{{ user.quiet_start if user.quiet_start is not none }}" class="border rounded p-1 w-14" placeholder="22">
+    to <input name="quiet_end" value="{{ user.quiet_end if user.quiet_end is not none }}" class="border rounded p-1 w-14" placeholder="7"> (hours, Belgian time; alerts wait until the end)</div>
+  <button class="bg-indigo-600 text-white rounded px-3 py-1">Save</button>
+</form>
+{% endblock %}

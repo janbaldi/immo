@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Parser test</h1>
+<form method="post" class="flex gap-2 mb-4"><input name="url" value="{{ url or '' }}" required placeholder="Paste a listing URL" class="flex-1 border rounded p-2">
+  <button class="bg-indigo-600 text-white rounded px-3">Parse</button></form>
+{% if error %}<p class="bg-red-50 text-red-700 p-2 rounded">{{ error }}</p>{% endif %}
+{% if raw %}
+<p class="mb-2 text-sm">Missing critical fields: <b>{{ missing|join(", ") or "none" }}</b></p>
+<table class="text-sm bg-white border w-full">{% for k, v in raw.items() %}<tr class="border-t"><td class="p-1 font-semibold w-40">{{ k }}</td><td class="p-1 break-all">{{ v }}</td></tr>{% endfor %}</table>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+# Seeds for `immo discover` (runs weekly in the worker, or by hand).
+# directories: pages that link to many agency websites. "{municipality}" is replaced by every
+#   municipality of the province. NEEDS VERIFICATION: confirm these directory URLs in a browser.
+# agency_sites: homepages you already know; each is inspected (template + listing page) and queued for review.
+province: antwerpen
+directories:
+  - "https://www.cib.be/nl/vastgoedmakelaar-zoeken?gemeente={municipality}"
+  - "https://www.biv.be/vastgoedmakelaar-zoeken?location={municipality}"
+agency_sites: []

@@ -1,0 +1,28 @@
+{% for c in cards %}{% set p = c.p %}{% set v = c.val %}
+<article class="bg-white rounded-xl shadow-sm border p-4 flex gap-4">
+  {% if c.photo %}<img src="{{ c.photo }}" alt="Photo of the property" loading="lazy" referrerpolicy="no-referrer" class="w-36 h-28 object-cover rounded hidden sm:block">{% endif %}
+  <div class="flex-1 min-w-0">
+    <div class="flex flex-wrap gap-1 mb-1">
+      {% for b in c.badges %}<span class="text-xs px-2 py-0.5 rounded-full {{ 'bg-green-100 text-green-800' if b == 'new' else 'bg-orange-100 text-orange-800' if b == 'price drop' else 'bg-purple-100 text-purple-800' }}">{{ b }}</span>{% endfor %}
+      <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100" title="EPC label">EPC {{ p.epc_label or "?" }}</span>
+      <span class="text-xs px-2 py-0.5 rounded-full {{ 'bg-red-100 text-red-800' if p.flood_p in ('C','D') else 'bg-slate-100' }}" title="Flood P-score (A = lowest risk)">Flood {{ p.flood_p or "?" }}</span>
+    </div>
+    <a href="/property/{{ p.id }}" class="font-semibold hover:underline">{{ c.title or p.property_type or "Property" }}</a>
+    <div class="text-sm text-slate-600">{{ p.municipality or "?" }} {{ p.postal_code or "" }} · {{ p.bedrooms or "?" }} bedrooms · {{ p.surface|int if p.surface else "?" }} m²</div>
+    <div class="flex items-baseline gap-3 mt-1">
+      <span class="text-lg font-bold">{{ p.price|euro }}</span>
+      {% if v and v.fair_value %}<span class="text-sm text-slate-500">fair {{ v.low|euro }}–{{ v.high|euro }}</span>
+      {% elif v and v.note %}<span class="text-xs text-slate-400">fair value: {{ v.note }}</span>{% endif %}
+      {% if user.plan == "investor" and v and v.gross_yield %}<span class="text-sm text-emerald-700">yield {{ "%.1f"|format(v.gross_yield * 100) }}%</span>{% endif %}
+    </div>
+    {% if c.pos is not none %}
+    <div class="relative h-2 bg-gradient-to-r from-green-300 via-yellow-200 to-red-300 rounded mt-2 max-w-xs" title="Asking price within the 80% fair-value range">
+      <div class="absolute -top-1 w-1 h-4 bg-slate-900" style="left: {{ c.pos }}%"></div>
+    </div>{% endif %}
+    {% if c.first %}<div class="text-xs text-slate-500 mt-2">First seen {{ c.minutes }} min ago on {{ c.first.source.name }} ·
+      <a href="{{ c.first.url }}" target="_blank" rel="noopener" class="text-indigo-700 underline">original listing</a></div>{% endif %}
+  </div>
+</article>
+{% else %}
+<p class="text-slate-500">No matching homes yet. New matches appear here automatically. Check your <a class="underline" href="/profiles">searches</a>.</p>
+{% endfor %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/admin" class="text-sm text-indigo-700">← Sources</a>
+<h1 class="text-2xl font-bold mt-2">{{ s.name }} <span class="text-base text-slate-500">({{ s.kind }}, {{ s.health }})</span></h1>
+<p class="text-sm"><a class="underline" href="{{ s.list_url }}" target="_blank" rel="noopener">{{ s.list_url }}</a></p>
+<p class="text-sm text-slate-600">{{ s.health_note or "" }}</p>
+<div class="flex gap-4 my-3 text-sm">
+  <form method="post" action="/admin/sources/{{ s.id }}/run"><button class="bg-indigo-600 text-white rounded px-3 py-1">Run source now</button></form>
+  <form method="post" action="/admin/sources/{{ s.id }}/interval" class="flex gap-1">Poll every <input name="poll_minutes" value="{{ s.poll_minutes }}" class="border rounded w-14 px-1"> min <button class="border rounded px-2">Save</button></form>
+  <form method="post" action="/admin/sources/{{ s.id }}/toggle"><button class="border rounded px-2">{{ "Switch off" if s.enabled else "Switch on" }}</button></form>
+</div>
+<h2 class="font-semibold mt-4 mb-2">Recent runs & error log</h2>
+<table class="w-full text-sm bg-white border">
+  <tr class="text-left text-slate-500"><th class="p-1">Started (UTC)</th><th>Full</th><th>Robots</th><th>Found</th><th>Fetched</th><th>New</th><th>Changed</th><th>Parse errors</th><th>Missing critical</th><th>Error</th></tr>
+  {% for r in runs %}<tr class="border-t"><td class="p-1">{{ r.started_at.strftime("%d/%m %H:%M") }}</td><td>{{ "yes" if r.full_crawl }}</td><td>{{ "ok" if r.robots_allowed else "blocked" }}</td>
+    <td>{{ r.listings_found }}</td><td>{{ r.details_fetched }}</td><td>{{ r.new_count }}</td><td>{{ r.changed_count }}</td><td>{{ r.parse_errors }}</td><td>{{ r.missing_critical }}</td>
+    <td class="text-red-700">{{ r.error or "" }}</td></tr>{% endfor %}
+</table>
+{% endblock %}

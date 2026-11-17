@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Users</h1>
+<table class="w-full text-sm bg-white border mb-6">
+  <tr class="text-left text-slate-500"><th class="p-1">E-mail</th><th>Plan</th><th>Admin</th><th>Searches</th><th>Telegram</th><th>Joined</th></tr>
+  {% for u in users %}<tr class="border-t"><td class="p-1">{{ u.email }}</td><td>{{ u.plan }}</td><td>{{ "yes" if u.is_admin }}</td>
+    <td>{{ u.profiles|selectattr("active")|list|length }}</td><td>{{ "yes" if u.telegram_chat_id }}</td><td>{{ u.created_at.strftime("%d/%m/%Y") }}</td></tr>{% endfor %}
+</table>
+<h2 class="font-semibold mb-2">Segment caps (active clients per municipality and segment)</h2>
+<table class="w-full text-sm bg-white border mb-3">
+  <tr class="text-left text-slate-500"><th class="p-1">Municipality</th><th>Segment</th><th>Active clients</th><th>Cap</th></tr>
+  {% for m, s, used, cap in caps %}<tr class="border-t {{ 'bg-red-50' if cap and used >= cap }}"><td class="p-1">{{ m }}</td><td>{{ s }}</td><td>{{ used }}</td>
+    <td>{{ cap or ("default " ~ settings.default_segment_cap if settings.default_segment_cap else "unlimited") }}</td></tr>{% endfor %}
+</table>
+<form method="post" action="/admin/caps" class="flex gap-2 text-sm"><input name="municipality" required placeholder="Municipality" class="border rounded p-1">
+  <select name="segment" class="border rounded p-1"><option>home</option><option>investor</option></select>
+  <input name="max_active" placeholder="cap (empty = remove)" class="border rounded p-1"><button class="border rounded px-2">Set cap</button></form>
+{% endblock %}

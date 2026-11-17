@@ -1,0 +1,30 @@
+# Add a province by adding an entry here (postal ranges + optional municipality list),
+# then set PROVINCE in .env and add discovery seeds for it in discovery.yaml.
+antwerpen:
+  label: Provincie Antwerpen
+  postal_ranges: [[2000, 2999]]
+  municipalities: [Aartselaar, Antwerpen, Arendonk, Baarle-Hertog, Balen, Beerse, Berlaar, Boechout, Bonheiden,
+    Boom, Bornem, Borsbeek, Brasschaat, Brecht, Dessel, Duffel, Edegem, Essen, Geel, Grobbendonk, Heist-op-den-Berg,
+    Hemiksem, Herentals, Herenthout, Herselt, Hoogstraten, Hove, Hulshout, Kalmthout, Kapellen, Kasterlee, Kontich,
+    Laakdal, Lier, Lille, Lint, Malle, Mechelen, Meerhout, Merksplas, Mol, Mortsel, Niel, Nijlen, Olen,
+    Oud-Turnhout, Putte, Puurs-Sint-Amands, Ranst, Ravels, Retie, Rijkevorsel, Rumst, Schelle, Schilde, Schoten,
+    Sint-Katelijne-Waver, Stabroek, Turnhout, Vorselaar, Vosselaar, Westerlo, Wijnegem, Willebroek, Wommelgem,
+    Wuustwezel, Zandhoven, Zoersel, Zwijndrecht,
+    # common district / deelgemeente names used in listings
+    Berchem, Borgerhout, Deurne, Ekeren, Hoboken, Merksem, Wilrijk, Berendrecht, Zandvliet, Lillo]
+limburg:
+  label: Provincie Limburg
+  postal_ranges: [[3500, 3999]]
+  municipalities: []
+oost-vlaanderen:
+  label: Provincie Oost-Vlaanderen
+  postal_ranges: [[9000, 9999]]
+  municipalities: []
+west-vlaanderen:
+  label: Provincie West-Vlaanderen
+  postal_ranges: [[8000, 8999]]
+  municipalities: []
+vlaams-brabant:
+  label: Provincie Vlaams-Brabant
+  postal_ranges: [[1500, 1999], [3000, 3499]]
+  municipalities: []

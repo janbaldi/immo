@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Support tickets</h1>
+<div class="space-y-2">{% for t, email in tickets %}
+  <div class="bg-white border rounded p-3 text-sm {{ 'opacity-60' if t.status == 'closed' }}">
+    <div class="flex justify-between"><b>{{ t.subject }}</b><span>{{ email }} · {{ t.created_at.strftime("%d/%m %H:%M") }} · {{ t.status }}</span></div>
+    <p class="whitespace-pre-wrap mt-1">{{ t.body }}</p>
+    {% if t.status == "open" %}<form method="post" action="/admin/tickets/{{ t.id }}/close"><button class="underline mt-1">Close</button></form>{% endif %}
+  </div>{% else %}<p class="text-slate-500">No tickets.</p>{% endfor %}</div>
+{% if drafts %}<h2 class="font-semibold mt-6 mb-2">Visit-request drafts waiting for approval</h2>
+{% for d in drafts %}<div class="bg-white border rounded p-3 text-sm mb-2"><pre class="whitespace-pre-wrap">{{ d.body }}</pre>
+  <form method="post" action="/contact/{{ d.id }}/approve"><button class="bg-green-600 text-white rounded px-2 py-1 mt-1">Approve & send</button></form></div>{% endfor %}{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Immo Agent{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+{% if user %}
+<nav class="bg-white border-b">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-4 items-center text-sm">
+    <a href="/feed" class="font-bold text-indigo-700 text-base">Immo Agent</a>
+    <a href="/feed" class="hover:underline">Feed</a>
+    <a href="/profiles" class="hover:underline">Searches</a>
+    <a href="/edge" class="hover:underline">My edge</a>
+    <a href="/settings" class="hover:underline">Alerts</a>
+    <a href="/faq" class="hover:underline">Help</a>
+    {% if user.is_admin %}
+    <span class="text-slate-300">|</span>
+    <a href="/admin" class="hover:underline">Sources</a>
+    <a href="/admin/metrics" class="hover:underline">Metrics</a>
+    <a href="/admin/model" class="hover:underline">Model</a>
+    <a href="/admin/users" class="hover:underline">Users</a>
+    <a href="/admin/tickets" class="hover:underline">Tickets</a>
+    <a href="/admin/dedup" class="hover:underline">Dedup review</a>
+    <a href="/admin/parser-test" class="hover:underline">Parser test</a>
+    {% endif %}
+    <form method="post" action="/logout" class="ml-auto"><button class="text-slate-500 hover:underline">Log out</button></form>
+  </div>
+</nav>
+{% endif %}
+<main class="max-w-6xl mx-auto px-4 py-6">{% block content %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,59 @@
+# Explicitly configured sources. Agency websites found by `immo discover` are stored in the database
+# and reviewed in Admin -> Sources. This file is re-applied on every start (`immo sources sync`);
+# the on/off switch you set in the admin UI is kept.
+#
+# Fields: name, kind (zabun|whise|omnicasa|generic|biddit|notary|immoweb|zimmo), base_url, list_url,
+#         province, poll_minutes (5-15 recommended), enabled, is_portal, use_browser, options.
+#
+# NEEDS VERIFICATION (see DECISIONS.md): the Biddit and notary JSON endpoints below are best guesses.
+# To confirm: open the site's search page in Chrome, press F12 -> Network -> Fetch/XHR, run a search,
+# and copy the request URL that returns the listings JSON into list_url.
+
+sources:
+  - name: Biddit
+    kind: biddit
+    base_url: https://www.biddit.be
+    list_url: https://www.biddit.be/api/eco/biddit-bff/sales/search
+    poll_minutes: 10
+    options:
+      detail_url: "https://www.biddit.be/nl/catalog/detail/{id}"
+      params: {province: "ANTWERPEN", sort: "PUBLICATION_DATE_DESC"}
+      page_param: page
+      first_page: 0
+      max_pages: 30
+
+  - name: Notaris immo
+    kind: notary
+    base_url: https://immo.notaris.be
+    list_url: https://immo.notaris.be/api/estates
+    poll_minutes: 10
+    options:
+      detail_url: "https://immo.notaris.be/nl/detail/{id}"
+      params: {province: "antwerpen", sort: "newest"}
+      page_param: page
+      first_page: 1
+      max_pages: 30
+
+  # Portal cross-check: read-only, newest listings only, stores portal_first_seen_at + URL only.
+  # Off by default. Switch on after legal review: PORTAL_CROSSCHECK_ENABLED=true and enable here or in admin.
+  - name: Immoweb (cross-check)
+    kind: immoweb
+    is_portal: true
+    enabled: false
+    base_url: https://www.immoweb.be
+    list_url: https://www.immoweb.be/nl/zoeken/huis-en-appartement/te-koop/provincie/antwerpen?orderBy=newest
+    poll_minutes: 20
+
+  - name: Zimmo (cross-check)
+    kind: zimmo
+    is_portal: true
+    enabled: false
+    base_url: https://www.zimmo.be
+    list_url: https://www.zimmo.be/nl/provincie/antwerpen/te-koop/?sort=recent
+    poll_minutes: 30
+
+  # Agency sites you add by hand go here, for example:
+  # - name: Voorbeeld Vastgoed
+  #   kind: zabun
+  #   base_url: https://www.voorbeeldvastgoed.be
+  #   list_url: https://www.voorbeeldvastgoed.be/nl/te-koop

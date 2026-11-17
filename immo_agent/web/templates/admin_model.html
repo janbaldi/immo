@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">Model quality</h1>
+<p class="text-sm text-slate-600 mb-4">{{ definitions.model_quality.definition }}</p>
+<p class="mb-4 text-sm">Interval coverage on listings that later dropped in price or sold:
+  <b>{{ "%.0f%%"|format(outcome[0] * 100) if outcome[0] is not none else "no outcomes yet" }}</b> (n={{ outcome[1] }})</p>
+<table class="w-full text-sm bg-white border">
+  <tr class="text-left text-slate-500"><th class="p-1">Version</th><th>Trained on</th><th>Tested on</th><th>MAPE</th><th>80% interval coverage</th></tr>
+  {% for r in runs %}<tr class="border-t"><td class="p-1">{{ r.version }}</td><td>{{ r.n_train }}</td><td>{{ r.n_test }}</td>
+    <td>{{ "%.1f%%"|format(r.mape * 100) if r.mape is not none }}</td><td>{{ "%.0f%%"|format(r.interval_coverage * 100) if r.interval_coverage is not none }}</td></tr>
+  {% else %}<tr><td colspan="5" class="p-2 text-slate-500">No model yet: it trains nightly once at least 100 real listings are collected.</td></tr>{% endfor %}
+</table>
+{% endblock %}

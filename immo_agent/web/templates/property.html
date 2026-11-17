@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}{% set p = c.p %}{% set v = c.val %}
+<a href="/feed" class="text-sm text-indigo-700">← Feed</a>
+<h1 class="text-2xl font-bold mt-2">{{ c.title or p.property_type }}</h1>
+<p class="text-slate-600">{{ p.street or "" }} {{ p.postal_code or "" }} {{ p.municipality or "" }} · {{ p.price|euro }} · {{ p.status.replace("_", " ") }}</p>
+<div class="flex gap-2 overflow-x-auto my-4">
+  {% for l in p.listings %}{% for ph in l.photos[:8] %}<img src="{{ ph }}" alt="Property photo" loading="lazy" referrerpolicy="no-referrer" class="h-40 rounded">{% endfor %}{% endfor %}
+</div>
+<div class="grid md:grid-cols-2 gap-4">
+  <section class="bg-white rounded-xl border p-4">
+    <h2 class="font-semibold mb-2">Fair value</h2>
+    {% if v and v.fair_value %}
+      <p>{{ v.fair_value|euro }} <span class="text-slate-500 text-sm">(80% range {{ v.low|euro }}–{{ v.high|euro }}, {{ v.n_comparables }} comparables)</span></p>
+      <p class="text-sm">Asking is {{ "%+.1f"|format((p.price - v.fair_value) / v.fair_value * 100) if p.price else "?" }}% vs fair value.</p>
+    {% else %}<p class="text-slate-500 text-sm">{{ v.note if v else "not valued yet" }}</p>{% endif %}
+    {% if v and v.rent_estimate %}<p class="text-sm mt-2">Rent estimate {{ v.rent_estimate|euro }}/month · gross yield {{ "%.1f"|format(v.gross_yield * 100) if v.gross_yield else "?" }}%</p>{% endif %}
+    <h2 class="font-semibold mt-4 mb-1">Motivated seller signals</h2>
+    <p class="text-sm">Score {{ v.motivated_score if v else 0 }}/100 · on market since {{ p.first_seen_anywhere_at.strftime("%d/%m/%Y") }}</p>
+  </section>
+  <section class="bg-white rounded-xl border p-4">
+    <h2 class="font-semibold mb-2">Facts & enrichment</h2>
+    <ul class="text-sm space-y-1">
+      <li>{{ p.bedrooms or "?" }} bedrooms · {{ p.surface|int if p.surface else "?" }} m² · {{ p.property_type or "?" }}</li>
+      <li>EPC {{ p.epc_label or "?" }} {% if p.epc_score %}({{ p.epc_score|int }} kWh/m²){% endif %}</li>
+      <li>Flood P-score {{ p.flood_p or "?" }} · G-score {{ p.flood_g or "?" }}</li>
+      {% for e in enrich %}<li class="text-slate-500">{{ e.kind }}: {{ e.value if e.ok else "not available" }}</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="bg-white rounded-xl border p-4">
+    <h2 class="font-semibold mb-2">Sources</h2>
+    <ul class="text-sm space-y-1">{% for l in p.listings|sort(attribute="first_seen_at") %}
+      <li>{{ l.source.name }} — first seen {{ l.first_seen_at.strftime("%d/%m %H:%M") }} UTC —
+        <a href="{{ l.url }}" target="_blank" rel="noopener" class="text-indigo-700 underline">open original</a> ({{ l.status.replace("_"," ") }})</li>{% endfor %}
+      {% if p.portal_first_seen_at %}<li class="text-slate-500">Seen on a portal {{ p.portal_first_seen_at.strftime("%d/%m %H:%M") }} UTC</li>{% endif %}
+    </ul>
+    <h2 class="font-semibold mt-4 mb-2">Price history</h2>
+    <ol class="text-sm border-l-2 pl-3 space-y-1">{% for at, type, old, new in history %}
+      <li><span class="text-slate-500">{{ at.strftime("%d/%m/%Y") }}</span> {{ type.replace("_", " ") }} {% if old or new %}{{ old or "" }} → {{ new or "" }}{% endif %}</li>{% endfor %}</ol>
+  </section>
+  <section class="bg-white rounded-xl border p-4">
+    <h2 class="font-semibold mb-2">My actions</h2>
+    <form method="post" action="/property/{{ p.id }}/action" class="flex flex-wrap gap-2 text-sm">
+      <button name="action" value="saved" class="border rounded px-2 py-1">Save</button>
+      <button name="action" value="contacted" class="border rounded px-2 py-1">I contacted the agency</button>
+      <button name="action" value="visit_booked" class="border rounded px-2 py-1">Visit booked</button>
+      <button name="action" value="bid" class="border rounded px-2 py-1">Bid placed</button>
+      <span class="flex gap-1"><input name="price" placeholder="price paid €" class="border rounded px-2 w-32"><button name="action" value="bought" class="border rounded px-2 py-1">Bought</button></span>
+    </form>
+    <ul class="text-sm mt-2 text-slate-600">{% for a in actions %}<li>{{ a.at.strftime("%d/%m %H:%M") }} {{ a.action.replace("_"," ") }}</li>{% endfor %}</ul>
+    {% if settings.outreach_enabled %}
+    <form method="post" action="/property/{{ p.id }}/visit-request" class="mt-3"><button class="bg-indigo-600 text-white rounded px-3 py-1 text-sm">Draft a visit request</button></form>
+    {% endif %}
+    {% for cr in contacts %}
+    <div class="mt-2 text-sm border rounded p-2"><pre class="whitespace-pre-wrap">{{ cr.body }}</pre><p>Status: {{ cr.status }} {{ cr.error or "" }}</p>
+      {% if cr.status == "draft" %}<form method="post" action="/contact/{{ cr.id }}/approve"><button class="bg-green-600 text-white rounded px-2 py-1">Approve & send</button></form>{% endif %}</div>
+    {% endfor %}
+  </section>
+</div>
+<section class="bg-white rounded-xl border p-4 mt-4">
+  <h2 class="font-semibold mb-2">Comparable listings</h2>
+  <table class="text-sm w-full"><tr class="text-left text-slate-500"><th>Where</th><th>Price</th><th>m²</th><th>€/m²</th></tr>
+  {% for cp in comps %}<tr><td><a class="underline" href="/property/{{ cp.id }}">{{ cp.municipality }}</a></td><td>{{ cp.price|euro }}</td><td>{{ cp.surface|int if cp.surface else "?" }}</td>
+    <td>{{ (cp.price / cp.surface)|round|int if cp.surface else "?" }}</td></tr>{% endfor %}</table>
+</section>
+{% endblock %}

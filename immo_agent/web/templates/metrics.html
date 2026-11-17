@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+  <h1 class="text-2xl font-bold">{{ title }}</h1>
+  <form method="get" class="text-sm flex gap-2">
+    {% if user.profiles and csv_base == "/edge" %}<select name="profile" class="border rounded p-1"><option value="">All searches</option>
+      {% for pr in user.profiles if pr.active %}<option value="{{ pr.id }}" {{ 'selected' if profile == pr.id }}>{{ pr.name }}</option>{% endfor %}</select>{% endif %}
+    <select name="days" class="border rounded p-1"><option value="">All time</option>{% for d in (7, 14, 30, 90) %}<option value="{{ d }}" {{ 'selected' if days == d }}>Last {{ d }} days</option>{% endfor %}</select>
+    <button class="border rounded px-2">Apply</button>
+  </form>
+</div>
+<div class="grid md:grid-cols-2 gap-4">
+{% for name, r in m.items() %}
+  <section class="bg-white border rounded-xl p-4">
+    <div class="flex justify-between items-start">
+      <h2 class="font-semibold">{{ r.title }} <span class="cursor-help text-slate-400" title="{{ r.definition }}">ⓘ</span></h2>
+      <a class="text-xs text-indigo-700 underline" href="{{ csv_base }}/{{ name }}.csv">CSV</a>
+    </div>
+    <p class="text-lg mt-1">{{ r.headline }}</p>
+    <p class="text-xs text-slate-500">{{ r.definition }}</p>
+    {% if r.chart["values"] %}<canvas id="c-{{ name }}" height="140" aria-label="{{ r.title }} chart" role="img"></canvas>
+    <script>
+      new Chart(document.getElementById("c-{{ name }}"), {type: {{ '"bar"' if name in ("coverage","detection_latency") else '"line"' }},
+        data: {labels: {{ r.chart["labels"]|tojson }}, datasets: [{label: {{ r.title|tojson }}, data: {{ r.chart["values"]|tojson }}, borderColor: "#4f46e5", backgroundColor: "#a5b4fc"}]},
+        options: {plugins: {legend: {display: false}}, scales: {x: {ticks: {display: {{ 'true' if name in ("coverage","detection_latency") else 'false' }}}}}}});
+    </script>{% endif %}
+  </section>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">My searches</h1>
+{% if error %}<p class="bg-red-50 text-red-700 p-2 rounded mb-3">{{ error }}</p>{% endif %}
+<div class="space-y-2 mb-6">
+{% for pr in user.profiles if pr.active %}
+  <div class="bg-white border rounded p-3 flex justify-between items-center text-sm">
+    <div><b>{{ pr.name }}</b> — {{ (pr.municipalities + pr.postal_codes)|join(", ") or "whole province" }} ·
+      {{ pr.property_types|join("/") or "any type" }} · {{ pr.min_price|euro if pr.min_price else "€0" }}–{{ pr.max_price|euro if pr.max_price else "∞" }}
+      {% if pr.min_bedrooms %}· {{ pr.min_bedrooms }}+ bedrooms{% endif %}{% if pr.min_surface %} · {{ pr.min_surface }}+ m²{% endif %}
+      {% if pr.epc_max %}· EPC ≤ {{ pr.epc_max }}{% endif %}{% if pr.flood_max %} · flood ≤ {{ pr.flood_max }}{% endif %}
+      {% if pr.investor %}· investor{% if pr.min_yield %}, yield ≥ {{ "%.1f"|format(pr.min_yield*100) }}%{% endif %}{% endif %}</div>
+    <form method="post" action="/profiles/{{ pr.id }}/delete"><button class="text-red-600">Remove</button></form>
+  </div>
+{% else %}<p class="text-slate-500">No searches yet. Create one below to start receiving alerts.</p>{% endfor %}
+</div>
+<form method="post" action="/profiles" class="bg-white border rounded-xl p-4 grid md:grid-cols-2 gap-3 text-sm">
+  <h2 class="md:col-span-2 font-semibold">New search</h2>
+  <label>Name<input name="name" value="My search" class="w-full border rounded p-2"></label>
+  <label>Postal codes (comma separated, optional)<input name="postal_codes" placeholder="2000, 2600" class="w-full border rounded p-2"></label>
+  <label class="md:col-span-2">Municipalities (hold Ctrl/Cmd to pick several; none = whole province)
+    <select name="municipalities" multiple size="8" class="w-full border rounded p-2">
+      {% for m in municipalities %}<option>{{ m }}</option>{% endfor %}
+    </select></label>
+  <fieldset class="md:col-span-2 flex flex-wrap gap-3"><legend class="mb-1">Type</legend>
+    {% for t, lbl in [("house","House"),("apartment","Apartment"),("land","Building land"),("commercial","Commercial"),("garage","Garage")] %}
+    <label><input type="checkbox" name="property_types" value="{{ t }}"> {{ lbl }}</label>{% endfor %}</fieldset>
+  <label>Min price €<input name="min_price" inputmode="numeric" class="w-full border rounded p-2"></label>
+  <label>Max price €<input name="max_price" inputmode="numeric" class="w-full border rounded p-2"></label>
+  <label>Min bedrooms<input name="min_bedrooms" inputmode="numeric" class="w-full border rounded p-2"></label>
+  <label>Min living area m²<input name="min_surface" inputmode="numeric" class="w-full border rounded p-2"></label>
+  <label>Worst EPC label accepted<select name="epc_max" class="w-full border rounded p-2"><option value="">any</option>{% for l in epc_labels %}<option>{{ l }}</option>{% endfor %}</select></label>
+  <label>Worst flood P-score accepted<select name="flood_max" class="w-full border rounded p-2"><option value="">any</option>{% for l in "ABCD" %}<option>{{ l }}</option>{% endfor %}</select></label>
+  <label class="flex items-center gap-2"><input type="checkbox" name="investor" value="true"> Investor search (show rent & yield)</label>
+  <label>Minimum gross yield %<input name="min_yield" placeholder="e.g. 4.5" class="w-full border rounded p-2"></label>
+  <button class="md:col-span-2 bg-indigo-600 text-white rounded p-2 font-semibold">Save search</button>
+</form>
+{% endblock %}

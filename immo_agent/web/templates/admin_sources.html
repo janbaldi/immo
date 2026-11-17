@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">Sources</h1>
+<div class="flex gap-3 text-sm mb-4">{% for st in ("active", "pending", "rejected") %}
+  <a href="/admin?status={{ st }}" class="{{ 'font-bold underline' if st == status }}">{{ st }} ({{ counts.get(st, 0) }})</a>{% endfor %}
+  <span class="text-slate-500 ml-auto">Pending = found by discovery, waiting for your review.</span></div>
+<table class="w-full text-sm bg-white border rounded-xl">
+  <tr class="text-left text-slate-500 border-b"><th class="p-2">Health</th><th>Name</th><th>Kind</th><th>Listings</th><th>Every</th><th>Last run</th><th>On/off</th><th></th></tr>
+  {% for s in sources %}
+  <tr class="border-b">
+    <td class="p-2"><span title="{{ s.health_note or '' }}" class="inline-block w-3 h-3 rounded-full {{ {'green':'bg-green-500','amber':'bg-amber-400','red':'bg-red-600'}.get(s.health, 'bg-slate-300') }}"></span>
+      <span class="sr-only">{{ s.health }}</span></td>
+    <td><a href="/admin/source/{{ s.id }}" class="underline">{{ s.name }}</a>{% if s.is_portal %} <span class="text-xs text-slate-500">(portal cross-check)</span>{% endif %}
+      <div class="text-xs text-slate-500">{{ s.health_note or "" }}</div></td>
+    <td>{{ s.kind }}</td><td>{{ listing_counts.get(s.id, 0) }}</td><td>{{ s.poll_minutes }} min</td>
+    <td>{{ s.last_run_at.strftime("%d/%m %H:%M") if s.last_run_at else "never" }}</td>
+    <td>{% if status == "active" %}<form method="post" action="/admin/sources/{{ s.id }}/toggle"><button class="px-2 rounded {{ 'bg-green-100' if s.enabled else 'bg-red-100' }}">{{ "on" if s.enabled else "off" }}</button></form>{% endif %}</td>
+    <td class="whitespace-nowrap">{% if status == "pending" %}
+      <form method="post" action="/admin/sources/{{ s.id }}/approve" class="inline"><button class="text-green-700 underline">approve</button></form>
+      <form method="post" action="/admin/sources/{{ s.id }}/reject" class="inline"><button class="text-red-700 underline">reject</button></form>
+      <a href="{{ s.list_url }}" target="_blank" rel="noopener" class="underline">view</a>
+    {% else %}<form method="post" action="/admin/sources/{{ s.id }}/run" class="inline"><button class="underline">run now</button></form>{% endif %}</td>
+  </tr>{% else %}<tr><td colspan="8" class="p-3 text-slate-500">None. Run <code>immo discover</code> to find agency websites.</td></tr>{% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">Dedup review</h1>
+<p class="text-sm text-slate-600 mb-4">Are these listings the same home? {{ n }} labelled so far{% if precision is not none %}, precision {{ "%.1f"|format(precision * 100) }}%{% endif %}. Target: 200 labels, ≥ 95%.</p>
+{% if p %}
+<div class="grid md:grid-cols-2 gap-3">{% for l in p.listings %}
+  <div class="bg-white border rounded p-3 text-sm">
+    {% if l.photos %}<img src="{{ l.photos[0] }}" alt="Listing photo" referrerpolicy="no-referrer" class="h-40 rounded mb-2">{% endif %}
+    <b>{{ l.source.name }}</b>: {{ l.title }}<br>{{ l.street or "" }} {{ l.postal_code }} {{ l.municipality }}<br>
+    {{ l.price|euro }} · {{ l.surface }} m² · {{ l.property_type }}<br><a href="{{ l.url }}" target="_blank" rel="noopener" class="underline">open</a></div>{% endfor %}</div>
+<form method="post" action="/admin/dedup/{{ p.id }}" class="flex gap-2 mt-4">
+  <button name="correct" value="true" class="bg-green-600 text-white rounded px-4 py-2">Same home</button>
+  <button name="correct" value="false" class="bg-red-600 text-white rounded px-4 py-2">Different homes</button></form>
+{% else %}<p class="text-slate-500">Nothing to review: no unlabelled properties with listings from 2+ sources yet.</p>{% endif %}
+{% endblock %}
